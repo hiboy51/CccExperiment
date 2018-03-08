@@ -1,0 +1,440 @@
+package scqp_eg;
+//import "common.proto";
+//import "room/room.proto";
+
+/*
+	游戏信息
+*/
+message GameInfo{
+	optional uint32 ante 				= 1; 	//剩余每张牌的积分
+	optional uint32 bomb				= 2;	//炸弹积分
+	optional room.BuildInfo buildInfo 	= 3; 	//创建房间的配置信息
+	optional bool AA 					= 4; 	//是否AA
+	optional uint32 code 				= 5;	//房号
+	optional uint32 cardCount 			= 6;	//总张数
+}
+message OpCard{
+	optional uint32 op 				= 1; 	//吃 碰 碰杠 补杠 暗杠
+	optional uint32 card			= 2;	//
+	optional uint32 yaojiCount		= 3;    //幺鸡的数量
+}
+
+/*
+	胡的信息
+*/
+message HuInfo{
+	optional uint32 op 			= 1; 	//胡的类型(Poker.OpZiMo, Poker.OpHu, Poker.OpQiangGangHu)
+	optional uint32 card  		= 2;	//胡牌
+	optional uint32 index  		= 3;	//胡的顺序 (从1开始)
+}
+
+/*
+	游戏中的玩家信息
+*/
+message GamePlayer{
+	optional room.Player player 	= 1; 	//玩家信息
+	optional bool play 				= 2; 	//false:旁观 true:在玩
+	optional bool offline 			= 3; 	//false:在线 true:离开
+	optional bool pay 				= 4; 	//是否支付,根据state来判断
+	optional bool ready 			= 5;	//false 未准备 true 准备
+	optional uint32 cardsNum 		= 6; 	//牌数
+	repeated uint32 cards 			= 7; 	//牌
+	optional bool turn 				= 8; 	//false:没有轮到你操作 true:轮到你操作
+	repeated uint32 opcards 		= 9; 	//检分的牌
+	optional OperateInfo opInfo     = 10;	//我的操作(nil:没 ~nil:有)
+	optional int32 points 			= 11; 	//总积分
+	optional int32 totalPoints = 12;
+	optional uint32 xiaZhu 	= 13; //下注，叫的分
+}
+
+/*
+	游戏登录
+*/
+message GameLoginRsp {
+	optional common.Result result 	= 1;   	//结果状态
+	optional GameInfo gameInfo 		= 2; 	//游戏配置
+	repeated GamePlayer players 	= 3; 	//所有玩家信息
+	optional uint32 state 			= 4; 	//处于玩牌状态
+																		//	Table.MASTER_PAY 	= 1 	--房主支付状态
+																		//	Table.NON_MASTER_PAY= 2 	--非房主支付状态
+																		//	Table.START 		= 3 	--游戏准备开始
+																		//	Table.DEAL 			= 4 	--发牌
+																		//	Table.XIAZHU        = 5     --叫分
+																		//	Table.MAKE_BANKER  	= 6		--确定庄家
+																	//		Table.JIAOZHU 		= 7     --叫主
+																	//		Table.KOU_DI		= 8   	--扣底
+																	//		Table.KOU_PAI		= 9		--扣底牌
+																	//		Table.JIAOPENG		= 10	--叫朋
+																	//		Table.BANKER_TURN   = 11	--庄家出牌阶段
+																	//		Table.TURN 			= 12 	--玩家操作阶段
+																		//	Table.TIMER			= 31	--倒计时阶段
+																		//	Table.END 			= 32 	--结果阶段
+
+	optional uint32 masterId				= 5;	//房主id
+	optional uint32 clockTime				= 6;	//倒计时
+	optional uint32 round 					= 7;	//第几局
+	optional uint32 totalRound 				= 8;	//总局数
+	optional uint32 leftNum 				= 9; 	//剩余张数
+	optional uint32 bankerId 				= 10; 	//庄家 0:暂无庄家 >0:有庄家
+	optional uint32 turn 					= 11;	//
+	optional uint32 maxTurn 				= 12;	//
+	optional uint32 xiaZhu 					= 13;   //当前的叫分
+}
+
+/*
+	广播登录房间
+*/
+message GamePlayerLoginRsp {
+	optional common.Result result  	= 1;  //结果状态
+	repeated GamePlayer players 	= 2;  //玩家信息
+}
+/*
+	游戏开始(广播)
+*/
+message StartRsp {
+	optional common.Result result 	= 1;	//结果状态
+	optional uint32 round 			= 2;	//第几局
+	optional uint32 totalRound 		= 3;	//总局数
+	repeated uint32 readyUids 		= 4;	//准备玩家的UID
+	optional uint32 turn 			= 5;    //当前第几轮 暂时不用
+	optional uint32 maxTurn 		= 6;    //总计几轮 暂时不用
+	optional uint32 bankerId        = 7;    //庄家ID
+}
+
+/*
+	准备操作
+*/
+message ReadyReq {
+	optional common.Request request = 1; 	// 请求码
+}
+
+/*
+	准备操作返回
+*/
+message ReadyRsp {
+	optional common.Result result 	= 1;	//结果状态
+											//0:操作合法
+											//1:准备时机不对
+											//2:不在桌子上
+											//3:已经准备了
+											//4:AA情况下，没有支付
+											//5:房主正在续费中
+	optional uint32 uid 			= 2;	//准备玩家
+}
+
+/*
+	发牌(明牌)(广播)
+*/
+message DealRsp {
+	optional common.Result result 	= 1;   	//结果状态
+	optional uint32 cardsNum        = 2;	//发牌数量
+	repeated uint32 cards 			= 3; 	//牌
+	optional uint32 bankerId 		= 4; 	//庄家
+}
+
+/*
+	操作信息
+*/
+message OperateInfo {
+	optional uint32 uid 			= 1;    //玩家id
+	optional uint32 op        		= 2;	//
+											//Poker.OpNone 			= 0x0 		--无操作
+											//Poker.OpQiangZhuang		= 0x1 		--抢庄
+											//Poker.OpXiaZhu			= 0x2		--下注
+											//Poker.OpShowCard		= 0x3		--亮牌
+											//Poker.OpGiveUp 			= 0x80 		--过
+	optional uint32 opCard 			= 3; 	//card的意义由op来定
+
+	optional bool noGiveUp 			= 4; 	// 不能过
+
+//	optional uint32 card 			= 5;	//操作的牌
+//	optional uint32 count			= 6;    //  扣牌时为扣牌牌数量
+//	repeated uint32 cards 	 		= 7; //扣的底牌
+
+
+
+//	repeated uint32 anCards 		= 4;	// 多暗杠的情况
+//	repeated uint32 buCards 		= 5; 	// 多补杠的情况
+//	repeated uint32 handCards 		= 6; 	// 胡-自摸时玩家的手牌
+//	optional uint32 handCount 		= 7; 	// 胡-自摸时玩家的手牌的数量
+//	optional uint32 huIndex 		= 8; 	// 胡的顺序 (从1开始)
+	
+//	repeated uint32 huFans 			= 10;   // 胡牌番型  自己胡才有
+//	optional uint32 yaojiCount     	= 21;	// 幺鸡数量
+//	repeated uint32 huanCards 		= 22;	// 换牌的情况
+//	optional uint32 qghByHuanYaoji  = 23;  //是由换幺鸡引起的抢杠胡
+}
+
+/*
+	轮到某玩家出牌
+*/
+message TurnRsp {
+	optional common.Result result 	= 1;   	//结果状态
+	optional uint32 uid        		= 2;	//操作玩家
+	optional int32 card 			= 3;	//
+
+	optional OperateInfo opInfo 	= 4;	//自己的操作
+}
+/*
+	某玩家操作  出牌、吃碰杠等
+*/
+message OperationReq {
+	optional common.Request request = 1; 	//请求码
+	optional uint32 op 				= 2;    //操作值
+	optional uint32 card 			= 3;	//操作的牌
+	optional uint32 count			= 4;    //  扣牌时为扣牌牌数量
+	repeated uint32 cards 	 	= 5; //扣的底牌
+}
+/*
+	某玩家操作返回(广播)
+*/
+
+message PengGangInfo {
+	optional uint32 op        		= 1;
+	optional uint32 card 			= 2;
+	optional uint32 yaojiCount     	= 3;
+}
+
+message CardInfo {
+	optional uint32 uid        		= 1;	//玩家
+	repeated PengGangInfo pengGangInfo = 2; //玩家的碰杠信息
+	repeated uint32 handCards = 3; //玩家的手牌信息
+}
+message OperationRsp {
+	optional common.Result result 	= 1;	//结果状态
+											//0:操作合法
+											//1:玩家不存在
+											//2:操作非法
+	optional OperateInfo opInfo     = 2;    //上家操作
+	optional OperateInfo myInfo     = 3;	//我的操作
+
+	optional CardInfo cardInfo    = 4;	//需要更新的玩家信息
+}
+
+
+/*
+	输家信息
+*/
+message LostInfo {
+	optional int32 uid 				= 1;  	//
+	optional int32 points 		= 2; 	//输的分，一般为负数
+}
+/*
+	详细结算积分
+*/
+message WinInfo {
+	optional int32 huType 			= 1;  	//胡类型
+											// Poker.OpZiMo
+											// Poker.OpHu
+											// Poker.OpQiangGangHu
+	optional int32 huCard 			= 2;    //胡牌
+	optional int32 fans 			= 3;	//总番数
+	optional int32 baseFan 			= 4;	//基础番
+	repeated int32 extraFans 		= 5;	//另加番
+	optional int32 points 			= 6; 	//本次赢分
+	repeated LostInfo lostInfos 	= 7; 	//输家信息
+	optional int32 huIndex 			= 8; 	//胡牌顺序
+}
+
+/*
+				单个玩家的结算信息
+			*/
+			message EndInfo {
+				optional uint32 uid 				= 1;	//玩家
+				repeated uint32 cards 				= 2;	//玩家的手牌
+				optional int32 points 				= 3;	//当局积分变动
+				optional int32 totalPoints 			= 4;	//总积分
+				optional int32 pokerType			= 5;	//
+				optional int32 zhuangZhu			= 6;	//
+				optional int32 myZhu				= 7; 	//我下的注，叫的分
+				//repeated OpCard opCards 			= 8; 	//得分的牌
+				repeated uint32 opCards             = 8;
+			}
+/*
+			总结算信息,只有最后一局才有
+			*/
+		message FinalInfo {
+			optional uint32 uid 			= 1;	//玩家
+			optional uint32 winCount		= 2;   //胜场
+			optional uint32 loseCount 	    = 3;    //败场
+			optional int32 maxWinPoint		= 4;    //最大赢取
+			optional uint32 maxPokerType    = 5;    //
+			optional int32 totalPoints		= 6;//总得分
+			optional uint32 drawCount = 7; //平场数
+		}
+
+/*
+			结算
+			*/
+			message EndRsp {
+				optional common.Result result 	= 1;   	//结果状态
+				optional bool lastRound 		= 2; 	//是否是最后一局
+				repeated EndInfo endInfos 		= 3; 	//结算信息,里面包含所有玩家的结算信息
+				repeated FinalInfo finalInfos 	= 4; 	//总结算信息(只有最后一局才有)
+				optional bool destroy 			= 5;    //是否解散房间了
+				optional int32 round			= 6;   //第几局
+				optional int32 totalRound 		= 7;	//总共多少局
+				optional int32 difen			= 8;	//底分
+				optional bool zhuangWinAll		= 9; // 庄家通吃
+				optional bool zhuangLose		= 10; //庄家通陪
+				optional uint32 masterId        = 11; //房主id
+				optional uint32 bankerId		= 12;  //庄家id
+			}
+
+/*
+	积分
+*/
+message Points {
+	optional uint32 uid 			= 1;	//玩家
+	optional int32 points 			= 2;	//变动的积分
+	optional int32 totalPoints 		= 3;	//总积分
+}
+/*
+	积分变动
+*/
+message PointsRsp {
+	optional common.Result result 	= 1;	//结果状态 0:操作合法 !0:操作非法
+	optional uint32 reason 			= 2; 	//变动原因 1:暗杠 2:碰杠 3:补杠 4:呼叫转移
+	repeated Points points 			= 3;	//玩家积分
+}
+
+/*
+	积分详情 0x350D
+*/
+message DetailPointsReq {
+	optional common.Request request = 1; 	//请求码
+}
+
+/*
+	积分详情 0x350D
+*/
+message DetailPointsRsp {
+	optional common.Result result 		= 1;	//结果状态
+	repeated EndInfo endInfos 			= 2; 	//结算信息
+}
+
+//message QiangZhuangPlayerRsp{
+//	optional common.Result result 		= 1;	//结果状态
+	//repeated
+//}
+
+message ZhuangJiaRsp{
+	optional common.Result result 		= 1;	//结果状态
+	optional uint32 bankerId 			= 2;  	//庄家id
+}
+
+message TimerRsp{
+	optional common.Result result 		= 1;	//结果状态
+	optional uint32 time = 2; //时间
+}
+
+message RoundRecordReq {
+	optional common.Request request = 1; 	//请求码
+}
+
+message RoundRecordRsp {
+	optional common.Result result 		= 1;	//结果状态
+	repeated  EndRsp	record = 2;		//牌局记录
+}
+
+message GameStateReq {
+	optional common.Request request = 1; 	//请求码
+}
+
+message GameStateRsp {
+	optional common.Result result 		= 1;	//结果状态
+	optional  GameLoginRsp	state = 2;
+}
+
+////////////////////////////
+message XiaZhuReq
+{
+	optional common.Request request = 1; 	//请求码
+	optional uint32  xiaZhu = 2;
+}
+
+message XiaZhuRsp
+{
+	optional common.Result result 		= 1;	//结果状态
+	optional int32  xiaZhu = 2;
+	optional uint32  userId = 3;
+}
+
+message JiaoZhuReq
+{
+	optional common.Request request = 1; 	//请求码
+	optional int32 zhuPai = 2;		//0, 黑， 1红，2白， 3方
+}
+
+message JiaoZhuRsp
+{
+	optional common.Result result 		= 1;	//结果状态
+	optional int32 zhuPai = 2;
+	optional uint32 userId = 3;
+}
+
+message JiaoPengReq
+{
+	optional common.Request request = 1; 	//请求码
+	optional int32 pengCard = 2;   			//朋牌
+}
+
+message JiaoPengRsp
+{
+	optional common.Result result = 1; 	//请求码
+	optional int32 pengCard = 2;   			//朋牌
+	optional uint32 userId = 3;
+}
+
+//message KouDiReq
+//{
+//	optional common.Request request = 1; 	//请求码
+//	optional uint32 cardsNum        = 2;	//发牌数量
+//	repeated uint32 cards 			= 3; 	//牌
+//	optional uint32 userId 		= 4; 	//玩家id
+//}
+
+message KouDiRsp
+{
+	optional common.Result result 	= 1; 	//请求码	
+	optional uint32 cardsNum        = 2;	//发牌数量
+	repeated uint32 cards 			= 3; 	//牌
+	optional uint32 userId 		= 4; 	//玩家id
+}
+
+message KouPaiReq
+{
+	optional common.Request request = 1; 	//请求码
+	repeated uint32 cards 			= 2; 	//牌
+	optional uint32 userId 		= 3; 	//玩家id
+}
+
+message KouPaiRsp
+{
+	optional common.Request request = 1; 	//请求码
+	repeated uint32 cards 			= 2; 	//牌
+	optional uint32 userId 		= 3; 	//玩家id
+}
+
+message MaxCardRsp
+{
+	optional common.Result result 	= 1; 	//请求码	
+	optional uint32 userId        = 2;	//玩家id
+	optional int32  maxCard	 		= 4; 	//最大的牌
+}
+
+message addScoreRsp
+{
+	optional common.Result result 	= 1; 	//请求码	
+	optional uint32 userId        	= 2;	//玩家id
+	optional int32  totalScore    	= 3;	//两家的得分
+	optional int32  myScore					= 4;   //玩家的得分
+	repeated int32  scoreCard	 			= 5; 	//玩家得分的牌
+}
+
+message FriendAppearRsp
+{
+	optional common.Result result 	= 1; 	//请求码	
+	optional uint32 userId        	= 2;	//玩家id
+	optional uint32 totalScore 			= 3;	//其他两家的得分
+}
