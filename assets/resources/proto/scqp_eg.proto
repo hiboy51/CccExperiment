@@ -1,6 +1,6 @@
 package scqp_eg;
-//import "common.proto";
-//import "room/room.proto";
+import "common.proto";
+import "room.proto";
 
 /*
 	游戏信息

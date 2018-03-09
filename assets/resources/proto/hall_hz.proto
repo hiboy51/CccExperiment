@@ -1,5 +1,5 @@
 package hall;
-//import "common.proto";
+import "common.proto";
 
 message Basic {
 	optional uint32 api 	 = 1;		// 渠道

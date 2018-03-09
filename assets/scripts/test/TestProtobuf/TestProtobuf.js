@@ -1,7 +1,8 @@
 /**
  * Created by Kinnon.Zhang on 2018/3/8.
+ * 测试protobufjs 5.x
  */
-var Protobuf = require("../../ThirdParty/Protobuf/protobuf");
+var Protobuf = require("../../ThirdParty/Protobuf/protobuf_2x");
 require("../../framework/Flow");
 
 cc.Class({

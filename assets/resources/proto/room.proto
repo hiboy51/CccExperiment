@@ -1,5 +1,5 @@
 package room;
-//import "common.proto";
+import "common.proto";
 
 /*
 	房间内玩家信息
