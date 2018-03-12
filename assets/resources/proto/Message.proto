@@ -1,0 +1,4 @@
+import "common.proto";
+import "hall_hz.proto";
+import "room.proto";
+import "scqp_eg.proto";

@@ -4,6 +4,7 @@
  */
 var Protobuf = require("../../ThirdParty/Protobuf/protobuf_2x");
 require("../../framework/Flow");
+const Message = require("Message");
 
 cc.Class({
     extends: cc.Component,
