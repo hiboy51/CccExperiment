@@ -1,0 +1,47 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "fanpai",
+  "_objFlags": 0,
+  "_rawFiles": null,
+  "_duration": 0.65,
+  "sample": 60,
+  "speed": 2,
+  "wrapMode": 1,
+  "curveData": {
+    "props": {
+      "scaleX": [
+        {
+          "frame": 0,
+          "value": 1
+        },
+        {
+          "frame": 0.3333333333333333,
+          "value": 0.1
+        },
+        {
+          "frame": 0.65,
+          "value": 1
+        }
+      ]
+    },
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "fb6fef15-310a-4454-a0ce-b09331b46a7a"
+            }
+          },
+          {
+            "frame": 0.35,
+            "value": {
+              "__uuid__": "2cc0f7aa-b965-4a60-8a82-185cb11c67f0"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}
